@@ -1,99 +1,178 @@
-let currentMap = [];
+let currentNodes = [];
+
 
 function generateMap() {
 
-    currentMap = [];
+    const container =
+        document.getElementById(
+            "mapNodes"
+        );
 
-    const types = [
-        "battle",
-        "battle",
-        "catch",
-        "item"
-    ];
+    container.innerHTML = "";
 
-    for (let layer = 0; layer < 4; layer++) {
 
-        const nodes = [];
+    currentNodes = [];
 
-        const count = layer === 0 ? 1 : 3;
 
-        for (let i = 0; i < count; i++) {
+    for (
+        let layer = 0;
+        layer < 5;
+        layer++
+    ) {
+
+        const column =
+            document.createElement(
+                "div"
+            );
+
+        column.className =
+            "map-column";
+
+
+        let count = 1;
+
+
+        if (
+            layer === 1 ||
+            layer === 2 ||
+            layer === 3
+        ) {
+            count = 2;
+        }
+
+
+        if (layer === 4) {
+            count = 1;
+        }
+
+
+        for (
+            let i = 0;
+            i < count;
+            i++
+        ) {
 
             let type;
 
-            if (layer === 3) {
-                type = "BOSS";
+
+            if (layer === 4) {
+
+                type = "boss";
+
             } else {
+
+                const types = [
+                    "battle",
+                    "battle",
+                    "capture",
+                    "item"
+                ];
+
                 type =
                     types[
                         Math.floor(
-                            Math.random() * types.length
+                            Math.random() *
+                            types.length
                         )
                     ];
+
             }
 
-            nodes.push({
-                id: `${layer}-${i}`,
-                type:type,
-                unlocked:layer === 0
+
+            const node =
+                document.createElement(
+                    "div"
+                );
+
+            node.className =
+                `map-node ${type}`;
+
+
+            node.textContent =
+                nodeIcon(type);
+
+
+            node.onclick = () =>
+                selectMapNode(type);
+
+
+            column.appendChild(node);
+
+
+            currentNodes.push({
+                type
             });
 
         }
 
-        currentMap.push(nodes);
+
+        container.appendChild(column);
+
     }
-
-    renderMap();
-}
-
-function renderMap() {
-
-    const container =
-        document.getElementById("mapNodes");
-
-    container.innerHTML = "";
-
-    currentMap.forEach((layer,index) => {
-
-        layer.forEach(node => {
-
-            const button =
-                document.createElement("div");
-
-            button.className =
-                `node ${node.type.toLowerCase()}`;
-
-            button.innerHTML =
-                getNodeIcon(node.type);
-
-            button.onclick = () =>
-                selectNode(node);
-
-            container.appendChild(button);
-
-        });
-
-    });
 
 }
 
-function getNodeIcon(type) {
 
-    switch(type) {
+function nodeIcon(type) {
 
-        case "battle":
-            return "⚔️";
+    if (type === "battle")
+        return "⚔️";
 
-        case "catch":
-            return "🐾";
+    if (type === "capture")
+        return "🐾";
 
-        case "item":
-            return "🎁";
+    if (type === "item")
+        return "🎁";
 
-        case "BOSS":
-            return "👑";
+    if (type === "boss")
+        return "👑";
 
-        default:
-            return "?";
+    return "?";
+
+}
+
+
+async function selectMapNode(type) {
+
+    if (game.battleRunning)
+        return;
+
+
+    if (
+        type === "battle" ||
+        type === "boss"
+    ) {
+
+        await startBattle();
+
+        return;
+
     }
+
+
+    if (type === "capture") {
+
+        await showCapture();
+
+        return;
+
+    }
+
+
+    if (type === "item") {
+
+        game.coins += 100;
+
+        alert(
+            "Encontraste ₽100!"
+        );
+
+        game.route++;
+
+        saveGame();
+
+        startAdventure();
+
+    }
+
 }
