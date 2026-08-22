@@ -553,3 +553,670 @@ header {
     }
 
 }
+/* =========================================================
+   POKELAB — MAP UI
+========================================================= */
+
+#map {
+    position: relative;
+
+    min-height: 100vh;
+
+    background:
+        radial-gradient(
+            circle at 50% 20%,
+            rgba(40,90,160,.20),
+            transparent 40%
+        ),
+        linear-gradient(
+            #090b10,
+            #050609
+        );
+}
+
+
+/* HEADER */
+
+.game-header {
+
+    position: sticky;
+
+    top: 0;
+
+    z-index: 20;
+
+    height: 64px;
+
+    background:
+        linear-gradient(
+            180deg,
+            #151922,
+            #0b0d12
+        );
+
+    border-bottom:
+        3px solid #e33535;
+
+    box-shadow:
+        0 5px 20px
+        rgba(0,0,0,.5);
+
+}
+
+
+.brand-small {
+
+    color: white;
+
+    font-weight: 1000;
+
+    font-size: 20px;
+
+    letter-spacing: 2px;
+
+    text-shadow:
+        2px 2px #e33535;
+
+}
+
+
+#coins {
+
+    background: #171b24;
+
+    border: 1px solid #343b48;
+
+    padding: 7px 12px;
+
+    border-radius: 20px;
+
+    color: #ffd92f;
+
+    font-weight: 900;
+
+}
+
+
+/* ROUTE */
+
+.route-header {
+
+    position: relative;
+
+    padding: 35px 20px 10px;
+
+}
+
+
+.route-header::after {
+
+    content: "";
+
+    display: block;
+
+    width: 100%;
+
+    max-width: 600px;
+
+    height: 3px;
+
+    margin: 20px auto 0;
+
+    background:
+        linear-gradient(
+            90deg,
+            transparent,
+            #e33535,
+            #ffd92f,
+            #e33535,
+            transparent
+        );
+
+}
+
+
+.route-header small {
+
+    color: #7d8797;
+
+    font-size: 10px;
+
+    font-weight: 900;
+
+    letter-spacing: 5px;
+
+}
+
+
+.route-header h1 {
+
+    font-weight: 1000;
+
+    text-transform: uppercase;
+
+    letter-spacing: 2px;
+
+}
+
+
+/* MAP */
+
+#mapNodes {
+
+    position: relative;
+
+    width: min(
+        950px,
+        100%
+    );
+
+    margin: 0 auto;
+
+    padding: 50px 20px 70px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 65px;
+
+}
+
+
+/* COLUMN */
+
+.map-column {
+
+    position: relative;
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 45px;
+
+}
+
+
+/* CONNECTION */
+
+.map-column:not(:last-child)::after {
+
+    content: "";
+
+    position: absolute;
+
+    right: -65px;
+
+    top: 50%;
+
+    width: 65px;
+
+    height: 4px;
+
+    background:
+        repeating-linear-gradient(
+            90deg,
+            #424957 0 8px,
+            transparent 8px 14px
+        );
+
+    transform:
+        translateY(-50%);
+
+}
+
+
+/* NODE */
+
+.map-node {
+
+    position: relative;
+
+    width: 92px;
+
+    height: 92px;
+
+    border-radius: 50%;
+
+    border: 4px solid #343b48;
+
+    background:
+        radial-gradient(
+            circle at 35% 30%,
+            #343b48,
+            #151922 65%,
+            #08090c
+        );
+
+    color: white;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    flex-direction: column;
+
+    cursor: pointer;
+
+    transition:
+        transform .2s,
+        border .2s,
+        box-shadow .2s;
+
+    box-shadow:
+        0 8px 20px
+        rgba(0,0,0,.55);
+
+}
+
+
+/* HOVER */
+
+.map-node:hover {
+
+    transform:
+        translateY(-6px)
+        scale(1.05);
+
+    border-color: white;
+
+    box-shadow:
+        0 12px 30px
+        rgba(0,0,0,.7);
+
+}
+
+
+/* ICON */
+
+.map-node-icon {
+
+    font-size: 30px;
+
+    font-weight: 1000;
+
+}
+
+
+/* TEXT */
+
+.map-node-label {
+
+    margin-top: 3px;
+
+    font-size: 7px;
+
+    font-weight: 1000;
+
+    letter-spacing: 1px;
+
+}
+
+
+/* BATTLE */
+
+.map-node.battle {
+
+    border-color: #e33535;
+
+}
+
+
+.map-node.battle
+.map-node-icon {
+
+    color: #ff4c4c;
+
+}
+
+
+/* CAPTURE */
+
+.map-node.capture {
+
+    border-color: #3498ff;
+
+}
+
+
+.map-node.capture
+.map-node-icon {
+
+    color: #ff3c3c;
+
+    text-shadow:
+        0 0 10px
+        rgba(255,60,60,.5);
+
+}
+
+
+/* ITEM */
+
+.map-node.item {
+
+    border-color: #f4c531;
+
+}
+
+
+.map-node.item
+.map-node-icon {
+
+    color: #ffd92f;
+
+}
+
+
+/* HEAL */
+
+.map-node.heal {
+
+    border-color: #48d987;
+
+}
+
+
+.map-node.heal
+.map-node-icon {
+
+    color: #5dff9b;
+
+}
+
+
+/* BOSS */
+
+.map-node.boss {
+
+    width: 110px;
+
+    height: 110px;
+
+    border-color: #ffd92f;
+
+    background:
+        radial-gradient(
+            circle,
+            #514313,
+            #1a1710 70%
+        );
+
+    box-shadow:
+        0 0 30px
+        rgba(255,217,47,.20);
+
+    animation:
+        bossPulse 2s infinite;
+
+}
+
+
+.map-node.boss
+.map-node-icon {
+
+    color: #ffd92f;
+
+    font-size: 38px;
+
+}
+
+
+@keyframes bossPulse {
+
+    0%,100% {
+
+        box-shadow:
+            0 0 15px
+            rgba(255,217,47,.15);
+
+    }
+
+    50% {
+
+        box-shadow:
+            0 0 35px
+            rgba(255,217,47,.40);
+
+    }
+
+}
+
+
+/* TEAM */
+
+.team-panel {
+
+    position: sticky;
+
+    bottom: 10px;
+
+    z-index: 10;
+
+    width: min(
+        900px,
+        calc(100% - 20px)
+    );
+
+    margin: 0 auto 20px;
+
+    padding: 12px;
+
+    background:
+        rgba(
+            10,
+            12,
+            17,
+            .92
+        );
+
+    backdrop-filter:
+        blur(15px);
+
+    border:
+        2px solid #343b48;
+
+    border-radius: 14px;
+
+    box-shadow:
+        0 10px 35px
+        rgba(0,0,0,.5);
+
+}
+
+
+.team-pokemon {
+
+    min-width: 100px;
+
+    border:
+        1px solid #343b48;
+
+    background:
+        linear-gradient(
+            145deg,
+            #202631,
+            #11141a
+        );
+
+}
+
+
+.team-pokemon img {
+
+    filter:
+        drop-shadow(
+            0 5px 5px
+            rgba(0,0,0,.6)
+        );
+
+}
+
+
+/* ITEM POPUP */
+
+.item-message {
+
+    position: fixed;
+
+    inset: 0;
+
+    z-index: 999;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    background:
+        rgba(0,0,0,.75);
+
+    backdrop-filter:
+        blur(8px);
+
+}
+
+
+.item-message-box {
+
+    width: min(
+        420px,
+        90%
+    );
+
+    padding: 30px;
+
+    text-align: center;
+
+    border:
+        2px solid #ffd92f;
+
+    border-radius: 15px;
+
+    background:
+        linear-gradient(
+            145deg,
+            #1b202a,
+            #0c0f14
+        );
+
+    box-shadow:
+        0 20px 70px
+        rgba(0,0,0,.7);
+
+}
+
+
+.item-ball {
+
+    margin: 0 auto 15px;
+
+    width: 60px;
+
+    height: 60px;
+
+    border-radius: 50%;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    color: white;
+
+    font-size: 25px;
+
+    background:
+        linear-gradient(
+            #e33535 0 45%,
+            #111 45% 55%,
+            white 55%
+        );
+
+    border:
+        4px solid #111;
+
+}
+
+
+.item-message-box button {
+
+    width: 100%;
+
+    margin-top: 15px;
+
+    padding: 13px;
+
+    border: 0;
+
+    border-radius: 7px;
+
+    background: #e33535;
+
+    color: white;
+
+    font-weight: 1000;
+
+    cursor: pointer;
+
+}
+
+
+/* MOBILE */
+
+@media(max-width:700px) {
+
+    #mapNodes {
+
+        justify-content:
+            flex-start;
+
+        overflow-x:
+            auto;
+
+        padding-left: 40px;
+
+        padding-right: 40px;
+
+    }
+
+
+    .map-column {
+
+        min-width: 90px;
+
+    }
+
+
+    .map-column:not(:last-child)::after {
+
+        right: -65px;
+
+    }
+
+
+    .map-node {
+
+        width: 75px;
+
+        height: 75px;
+
+    }
+
+
+    .map-node.boss {
+
+        width: 90px;
+
+        height: 90px;
+
+    }
+
+}
