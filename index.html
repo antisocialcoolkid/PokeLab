@@ -1,68 +1,86 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-
-    <title>PokeLab</title>
-
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PokeLab</title>
+<link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
 <div id="app">
 
-    <!-- MENU -->
-
     <section id="menu" class="screen active">
 
-        <div class="logo">
-            POKELAB
+        <div class="pokeball-logo">
+            <div class="pokeball-center"></div>
         </div>
 
-        <div class="subtitle">
-            POKÉMON ROGUELIKE
+        <div class="title">
+            <span>POKE</span><b>LAB</b>
         </div>
 
-        <button onclick="newRun()">
-            NEW RUN
-        </button>
+        <div class="title-line"></div>
 
-        <button onclick="loadRun()">
-            CONTINUE
-        </button>
+        <p class="menu-subtitle">
+            MONSTER ROGUELIKE
+        </p>
+
+        <div class="menu-buttons">
+
+            <button class="pokemon-button red"
+                    onclick="newRun()">
+                <span>▶</span>
+                NUEVA RUN
+            </button>
+
+            <button class="pokemon-button blue"
+                    onclick="loadRun()">
+                <span>↻</span>
+                CONTINUAR
+            </button>
+
+            <button class="pokemon-button dark"
+                    onclick="showDex()">
+                <span>▣</span>
+                POKÉDEX
+            </button>
+
+        </div>
+
+        <div class="version">
+            POKELAB v0.2
+        </div>
 
     </section>
 
-
-    <!-- STARTER -->
 
     <section id="starter" class="screen">
 
-        <h1>CHOOSE YOUR STARTER</h1>
+        <div class="page-title">
+            <small>POKELAB</small>
+            <h1>ELIGE TU POKÉMON</h1>
+            <p>Tu aventura comienza aquí.</p>
+        </div>
 
-        <p class="description">
-            Elige un Pokémon para comenzar tu aventura.
-        </p>
-
-        <div id="starterList" class="pokemon-grid"></div>
+        <div id="starterList"
+             class="pokemon-grid">
+        </div>
 
     </section>
 
 
-    <!-- MAP -->
-
     <section id="map" class="screen">
 
-        <header>
+        <header class="game-header">
 
-            <div class="header-logo">
+            <div class="brand-small">
                 POKELAB
             </div>
 
             <div id="teamInfo">
-                TEAM 0/6
+                0/6
             </div>
 
             <div id="coins">
@@ -71,21 +89,23 @@
 
         </header>
 
-        <div class="map-title">
+        <div class="route-header">
 
-            <span>ROUTE</span>
+            <small>REGIÓN</small>
 
-            <b id="routeNumber">
-                1
-            </b>
+            <h1>
+                RUTA <span id="routeNumber">1</span>
+            </h1>
 
         </div>
 
         <div id="mapNodes"></div>
 
-        <div class="team">
+        <div class="team-panel">
 
-            <h2>YOUR TEAM</h2>
+            <div class="panel-title">
+                TU EQUIPO
+            </div>
 
             <div id="team"></div>
 
@@ -94,60 +114,63 @@
     </section>
 
 
-    <!-- BATTLE -->
+    <section id="battle" class="screen battle-screen">
 
-    <section id="battle" class="screen">
+        <div class="battle-topbar">
+            <b>POKELAB BATTLE</b>
+            <span id="battleTeamCount"></span>
+        </div>
 
-        <div class="battle-arena">
+        <div class="battle-field">
 
-            <div class="enemy-side">
+            <div class="enemy-container">
 
-                <div class="pokemon-info">
+                <div class="battle-card">
 
-                    <b id="enemyName">
-                        —
-                    </b>
-
-                    <span id="enemyLevel">
-                        Lv. 5
-                    </span>
-
-                    <div class="hp-bar">
-                        <div id="enemyHPBar"></div>
+                    <div class="battle-name">
+                        <b id="enemyName">---</b>
+                        <span id="enemyLevel">Lv.5</span>
                     </div>
+
+                    <div class="hp-background">
+                        <div id="enemyHPBar"
+                             class="hp-fill">
+                        </div>
+                    </div>
+
+                    <small id="enemyHPText">
+                        0 / 0
+                    </small>
 
                 </div>
 
-                <img
-                    id="enemySprite"
-                    class="pokemon-sprite enemy-sprite"
-                >
+                <img id="enemySprite"
+                     class="battle-sprite enemy-sprite">
 
             </div>
 
 
-            <div class="player-side">
+            <div class="player-container">
 
-                <img
-                    id="playerSprite"
-                    class="pokemon-sprite player-sprite"
-                >
+                <img id="playerSprite"
+                     class="battle-sprite player-sprite">
 
-                <div class="pokemon-info">
+                <div class="battle-card player-card">
 
-                    <b id="playerName">
-                        —
-                    </b>
-
-                    <span id="playerLevel">
-                        Lv. 5
-                    </span>
-
-                    <div class="hp-bar">
-
-                        <div id="playerHPBar"></div>
-
+                    <div class="battle-name">
+                        <b id="playerName">---</b>
+                        <span id="playerLevel">Lv.5</span>
                     </div>
+
+                    <div class="hp-background">
+                        <div id="playerHPBar"
+                             class="hp-fill">
+                        </div>
+                    </div>
+
+                    <small id="playerHPText">
+                        0 / 0
+                    </small>
 
                 </div>
 
@@ -156,62 +179,139 @@
         </div>
 
 
-        <div class="battle-bottom">
+        <div class="battle-interface">
 
             <div id="battleLog">
-                ¡Comienza el combate!
+                ¡El combate comienza!
             </div>
 
             <div id="moves"></div>
 
+            <button class="switch-button"
+                    onclick="openSwitchMenu()">
+                🔄 CAMBIAR POKÉMON
+            </button>
+
         </div>
 
     </section>
 
 
-    <!-- CAPTURE -->
+    <section id="switch"
+             class="screen overlay-screen">
+
+        <div class="modal">
+
+            <h2>CAMBIAR POKÉMON</h2>
+
+            <p>Elige quién entra al combate.</p>
+
+            <div id="switchList"></div>
+
+            <button onclick="closeSwitchMenu()">
+                CANCELAR
+            </button>
+
+        </div>
+
+    </section>
+
 
     <section id="capture" class="screen">
 
-        <h1>NEW POKÉMON</h1>
+        <div class="page-title">
 
-        <p>
-            Elige un Pokémon para añadir a tu equipo.
-        </p>
+            <small>ENCUENTRO</small>
 
-        <div id="captureList" class="pokemon-grid"></div>
+            <h1>¡NUEVO POKÉMON!</h1>
 
-        <button onclick="skipCapture()">
-            CONTINUE
+            <p>
+                Elige uno para añadirlo a tu equipo.
+            </p>
+
+        </div>
+
+        <div id="captureList"
+             class="pokemon-grid">
+        </div>
+
+        <button class="pokemon-button dark"
+                onclick="skipCapture()">
+            CONTINUAR
         </button>
 
     </section>
 
 
-    <!-- GAME OVER -->
+    <section id="heal" class="screen">
+
+        <div class="center-box">
+
+            <div class="pokeball-logo small"></div>
+
+            <h1>CENTRO POKÉMON</h1>
+
+            <p>
+                Tus Pokémon necesitan descansar.
+            </p>
+
+            <button class="pokemon-button red"
+                    onclick="healTeam()">
+                ❤️ CURAR EQUIPO
+            </button>
+
+        </div>
+
+    </section>
+
 
     <section id="gameover" class="screen">
 
-        <div class="logo">
-            GAME OVER
+        <div class="center-box">
+
+            <h1>GAME OVER</h1>
+
+            <p>
+                Todos tus Pokémon han sido debilitados.
+            </p>
+
+            <button class="pokemon-button red"
+                    onclick="newRun()">
+                NUEVA RUN
+            </button>
+
+            <button class="pokemon-button dark"
+                    onclick="showScreen('menu')">
+                MENÚ
+            </button>
+
         </div>
 
-        <p>
-            Tu aventura ha terminado.
-        </p>
+    </section>
 
-        <button onclick="newRun()">
-            NEW RUN
-        </button>
 
-        <button onclick="showScreen('menu')">
-            MENU
-        </button>
+    <section id="victory" class="screen">
+
+        <div class="center-box victory">
+
+            <div class="pokeball-logo"></div>
+
+            <h1>¡CAMPEÓN!</h1>
+
+            <p>
+                Has completado la run de PokeLab.
+            </p>
+
+            <button class="pokemon-button red"
+                    onclick="newRun()">
+                NUEVA RUN
+            </button>
+
+        </div>
 
     </section>
 
 </div>
-
 
 <script src="data.js"></script>
 <script src="game.js"></script>
