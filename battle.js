@@ -1,47 +1,60 @@
+let battleBusy = false;
+
+
 async function startBattle() {
 
-    game.battleRunning = true;
+    const available = game.team.filter(
+        pokemon => pokemon.currentHP > 0
+    );
 
+    if (!available.length) {
 
-    const player =
-        game.team[0];
+        gameOver();
 
+        return;
+    }
 
-    const enemy =
-        await getPokemon(
-            randomWildName()
-        );
+    game.currentPokemon = available[0];
 
+    const enemy = await getPokemon(
+        randomWildName()
+    );
 
     enemy.level =
         Math.max(
-            2,
-            player.level
+            5,
+            game.route + 3
         );
-
 
     enemy.currentHP =
         enemy.stats.hp;
 
+    game.enemyPokemon = enemy;
 
-    game.currentPokemon =
-        player;
-
-
-    game.enemyPokemon =
-        enemy;
-
+    game.battleRunning = true;
 
     showScreen("battle");
 
+    updateBattleTeam();
 
     renderBattle();
 
-
     logBattle(
-        `¡Un ${enemy.name} salvaje apareció!`
+        `¡${enemy.name} salvaje apareció!`
     );
+}
 
+
+function updateBattleTeam() {
+
+    const alive = game.team.filter(
+        pokemon => pokemon.currentHP > 0
+    ).length;
+
+    document.getElementById(
+        "battleTeamCount"
+    ).textContent =
+        `${alive}/${game.team.length} disponibles`;
 }
 
 
@@ -53,52 +66,37 @@ function renderBattle() {
     const enemy =
         game.enemyPokemon;
 
+    if (!player || !enemy)
+        return;
 
-    document
-        .getElementById(
-            "playerName"
-        )
-        .textContent =
+    document.getElementById(
+        "playerName"
+    ).textContent =
         player.name;
 
-
-    document
-        .getElementById(
-            "playerLevel"
-        )
-        .textContent =
+    document.getElementById(
+        "playerLevel"
+    ).textContent =
         `Lv.${player.level}`;
 
-
-    document
-        .getElementById(
-            "playerSprite"
-        )
-        .src =
+    document.getElementById(
+        "playerSprite"
+    ).src =
         player.image;
 
-
-    document
-        .getElementById(
-            "enemyName"
-        )
-        .textContent =
+    document.getElementById(
+        "enemyName"
+    ).textContent =
         enemy.name;
 
-
-    document
-        .getElementById(
-            "enemyLevel"
-        )
-        .textContent =
+    document.getElementById(
+        "enemyLevel"
+    ).textContent =
         `Lv.${enemy.level}`;
 
-
-    document
-        .getElementById(
-            "enemySprite"
-        )
-        .src =
+    document.getElementById(
+        "enemySprite"
+    ).src =
         enemy.image;
 
 
@@ -110,7 +108,6 @@ function renderBattle() {
             100
         );
 
-
     const enemyPercent =
         Math.max(
             0,
@@ -120,146 +117,191 @@ function renderBattle() {
         );
 
 
-    document
-        .getElementById(
-            "playerHPBar"
-        )
-        .style.width =
+    document.getElementById(
+        "playerHPBar"
+    ).style.width =
         playerPercent + "%";
 
-
-    document
-        .getElementById(
-            "enemyHPBar"
-        )
-        .style.width =
+    document.getElementById(
+        "enemyHPBar"
+    ).style.width =
         enemyPercent + "%";
+
+
+    document.getElementById(
+        "playerHPText"
+    ).textContent =
+        `${player.currentHP} / ${player.stats.hp}`;
+
+    document.getElementById(
+        "enemyHPText"
+    ).textContent =
+        `${enemy.currentHP} / ${enemy.stats.hp}`;
 
 
     renderMoves();
 
+    updateBattleTeam();
 }
 
 
 function renderMoves() {
 
     const container =
-        document.getElementById(
-            "moves"
-        );
-
+        document.getElementById("moves");
 
     container.innerHTML = "";
 
+    if (
+        !game.currentPokemon ||
+        game.currentPokemon.currentHP <= 0
+    ) {
+        return;
+    }
+
 
     const moves =
-        game.currentPokemon.moves
-        .slice(0, 4);
+        game.currentPokemon.moves.slice(0,4);
 
 
     moves.forEach(
-        (move, index) => {
+        (move,index) => {
 
             const button =
-                document.createElement(
-                    "button"
-                );
-
+                document.createElement("button");
 
             button.textContent =
                 move.name
-                .replaceAll(
-                    "-",
-                    " "
-                );
-
+                .replaceAll("-"," ");
 
             button.onclick = () =>
                 playerAttack(index);
 
-
-            container.appendChild(
-                button
-            );
+            container.appendChild(button);
 
         }
     );
-
 }
 
 
 async function playerAttack(index) {
 
-    if (!game.battleRunning)
+    if (battleBusy)
         return;
 
-
-    game.battleRunning = false;
+    battleBusy = true;
 
 
     const player =
         game.currentPokemon;
 
-
     const enemy =
         game.enemyPokemon;
-
 
     const move =
         player.moves[index];
 
 
     const damage =
-        Math.floor(
-            player.stats.attack /
-            3
-        )
-        +
-        5
-        +
-        Math.floor(
-            Math.random() * 8
+        calculateDamage(
+            player,
+            enemy,
+            move
         );
 
 
     enemy.currentHP -= damage;
 
-
-    if (
-        enemy.currentHP < 0
-    ) {
-
+    if (enemy.currentHP < 0)
         enemy.currentHP = 0;
-
-    }
 
 
     renderBattle();
 
-
     logBattle(
-        `${player.name} usó ${move.name}!`
+        `${player.name} usó ${move.name.replaceAll("-", " ")}.`
     );
 
 
-    if (
-        enemy.currentHP <= 0
-    ) {
+    if (enemy.currentHP <= 0) {
 
-        await sleep(1000);
+        await sleep(900);
 
-        victory();
+        await victory();
+
+        battleBusy = false;
 
         return;
-
     }
 
 
-    await sleep(900);
-
+    await sleep(800);
 
     enemyAttack();
 
+}
+
+
+function calculateDamage(
+    attacker,
+    defender,
+    move
+) {
+
+    const base =
+        Math.floor(
+            attacker.stats.attack / 3
+        ) + 5;
+
+    const random =
+        Math.floor(
+            Math.random() * 7
+        );
+
+    let damage =
+        base + random;
+
+
+    if (
+        attacker.types.includes("fire") &&
+        defender.types.includes("grass")
+    ) {
+        damage *= 2;
+
+        logBattle(
+            "¡Es supereficaz!"
+        );
+    }
+
+
+    if (
+        attacker.types.includes("water") &&
+        defender.types.includes("fire")
+    ) {
+        damage *= 2;
+    }
+
+
+    if (
+        attacker.types.includes("grass") &&
+        defender.types.includes("water")
+    ) {
+        damage *= 2;
+    }
+
+
+    if (
+        attacker.types.includes("electric") &&
+        defender.types.includes("water")
+    ) {
+        damage *= 2;
+    }
+
+
+    return Math.max(
+        1,
+        Math.floor(damage)
+    );
 }
 
 
@@ -268,82 +310,271 @@ async function enemyAttack() {
     const player =
         game.currentPokemon;
 
-
     const enemy =
         game.enemyPokemon;
 
 
     const damage =
         Math.floor(
-            enemy.stats.attack /
-            3
+            enemy.stats.attack / 3
         )
         +
         4
         +
         Math.floor(
-            Math.random() * 6
+            Math.random() * 7
         );
 
 
     player.currentHP -= damage;
 
 
-    if (
-        player.currentHP < 0
-    ) {
-
+    if (player.currentHP < 0)
         player.currentHP = 0;
 
+
+    renderBattle();
+
+    logBattle(
+        `${enemy.name} atacó.`
+    );
+
+
+    if (player.currentHP <= 0) {
+
+        await sleep(700);
+
+        await pokemonFainted();
+
+        battleBusy = false;
+
+        return;
     }
+
+
+    battleBusy = false;
+
+}
+
+
+async function pokemonFainted() {
+
+    const fainted =
+        game.currentPokemon;
+
+
+    fainted.currentHP = 0;
 
 
     renderBattle();
 
 
     logBattle(
-        `${enemy.name} atacó!`
+        `¡${fainted.name} se debilitó!`
     );
 
 
-    if (
-        player.currentHP <= 0
-    ) {
+    await sleep(900);
 
-        await sleep(1000);
 
-        gameOver();
+    const alive =
+        game.team.filter(
+            pokemon =>
+                pokemon.currentHP > 0
+        );
+
+
+    /*
+     * AQUÍ ESTÁ LA SOLUCIÓN:
+     * si quedan Pokémon vivos,
+     * NO termina la partida.
+     */
+
+    if (alive.length > 0) {
+
+        openSwitchMenu(true);
 
         return;
-
     }
 
 
-    game.battleRunning = true;
+    gameOver();
+
+}
+
+
+function openSwitchMenu(force = false) {
+
+    if (
+        !force &&
+        battleBusy
+    ) {
+        return;
+    }
+
+
+    showScreen("switch");
+
+
+    const container =
+        document.getElementById(
+            "switchList"
+        );
+
+
+    container.innerHTML = "";
+
+
+    game.team.forEach(
+        (pokemon,index) => {
+
+            const disabled =
+                pokemon.currentHP <= 0 ||
+                pokemon === game.currentPokemon;
+
+
+            const element =
+                document.createElement("div");
+
+
+            element.className =
+                "switch-pokemon";
+
+
+            if (disabled)
+                element.classList.add(
+                    "disabled"
+                );
+
+
+            element.innerHTML = `
+
+                <img src="${pokemon.image}">
+
+                <div>
+
+                    <b>
+                        ${pokemon.name}
+                    </b>
+
+                    <br>
+
+                    <small>
+                        Lv.${pokemon.level}
+                    </small>
+
+                    <br>
+
+                    <small>
+                        HP:
+                        ${pokemon.currentHP}
+                        /
+                        ${pokemon.stats.hp}
+                    </small>
+
+                </div>
+
+            `;
+
+
+            if (!disabled) {
+
+                element.onclick = () =>
+                    switchPokemon(index);
+
+            }
+
+
+            container.appendChild(
+                element
+            );
+
+        }
+    );
+
+
+}
+
+
+function closeSwitchMenu() {
+
+    showScreen("battle");
+
+}
+
+
+async function switchPokemon(index) {
+
+    const pokemon =
+        game.team[index];
+
+
+    if (
+        pokemon.currentHP <= 0 ||
+        pokemon === game.currentPokemon
+    ) {
+        return;
+    }
+
+
+    game.currentPokemon =
+        pokemon;
+
+
+    showScreen("battle");
+
+    renderBattle();
+
+
+    logBattle(
+        `¡Adelante, ${pokemon.name}!`
+    );
+
+
+    /*
+     * Cambiar Pokémon consume el turno,
+     * así que el enemigo ataca.
+     */
+
+    await sleep(800);
+
+    if (
+        game.enemyPokemon.currentHP > 0
+    ) {
+
+        enemyAttack();
+
+    }
 
 }
 
 
 async function victory() {
 
-    logBattle(
-        `¡${game.enemyPokemon.name} fue derrotado!`
-    );
+    const winner =
+        game.currentPokemon;
+
+
+    winner.level++;
 
 
     game.coins += 50;
 
 
-    game.currentPokemon.level++;
+    logBattle(
+        `¡${game.enemyPokemon.name} fue derrotado!`
+    );
+
+
+    saveGame();
 
 
     await sleep(1000);
 
 
-    game.route++;
+    battleBusy = false;
 
-
-    saveGame();
+    game.battleRunning = false;
 
 
     await showCapture();
@@ -385,9 +616,7 @@ async function showCapture() {
             )
         ) {
 
-            choices.push(
-                pokemon
-            );
+            choices.push(pokemon);
 
         }
 
@@ -412,9 +641,7 @@ async function showCapture() {
 
             card.innerHTML = `
 
-                <img
-                    src="${pokemon.image}"
-                >
+                <img src="${pokemon.image}">
 
                 <h2>
                     ${pokemon.name}
@@ -438,29 +665,32 @@ async function showCapture() {
             card.onclick = () => {
 
                 if (
-                    game.team.length < 6
+                    game.team.length >= 6
                 ) {
 
-                    pokemon.level =
-                        Math.max(
-                            5,
-                            game.route + 4
-                        );
-
-
-                    pokemon.currentHP =
-                        pokemon.stats.hp;
-
-
-                    game.team.push(
-                        pokemon
+                    alert(
+                        "Tu equipo ya tiene 6 Pokémon."
                     );
+
+                    return;
 
                 }
 
 
-                game.battleRunning =
-                    false;
+                pokemon.level =
+                    Math.max(
+                        5,
+                        game.route + 4
+                    );
+
+
+                pokemon.currentHP =
+                    pokemon.stats.hp;
+
+
+                game.team.push(
+                    pokemon
+                );
 
 
                 saveGame();
@@ -482,11 +712,9 @@ async function showCapture() {
 
 function logBattle(text) {
 
-    document
-        .getElementById(
-            "battleLog"
-        )
-        .textContent =
+    document.getElementById(
+        "battleLog"
+    ).textContent =
         text;
 
 }
