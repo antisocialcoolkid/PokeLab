@@ -1,341 +1,523 @@
+/* =========================================================
+   POKELAB — game.js
+========================================================= */
+
+let game = {
+    started: false,
+    coins: 500,
+    route: 1,
+    team: [],
+    defeated: [],
+    dexSeen: [],
+    currentPokemon: 0
+};
+
+function $(id) {
+    return document.getElementById(id);
+}
+
 function showScreen(id) {
+    document.querySelectorAll(".screen").forEach(screen => {
+        screen.classList.remove("active");
+    });
 
-    document
-        .querySelectorAll(".screen")
-        .forEach(screen => {
+    const screen = $(id);
 
-            screen.classList.remove("active");
-
-        });
-
-    document
-        .getElementById(id)
-        .classList.add("active");
-
+    if (screen) {
+        screen.classList.add("active");
+    }
 }
 
+function newRun() {
 
-async function newRun() {
+    localStorage.removeItem("pokelab_save");
 
-    game.team = [];
+    game = {
+        started: false,
+        coins: 500,
+        route: 1,
+        team: [],
+        defeated: [],
+        dexSeen: [],
+        currentPokemon: 0
+    };
 
-    game.route = 1;
-
-    game.coins = 500;
-
-    game.currentPokemon = null;
-
-    game.enemyPokemon = null;
-
-    game.battleRunning = false;
-
-    saveGame();
-
-    await showStarters();
-
+    showStarterSelection();
 }
 
-
-async function showStarters() {
+function showStarterSelection() {
 
     showScreen("starter");
 
-    const container =
-        document.getElementById(
-            "starterList"
-        );
+    const container = $("starterList");
 
-    container.innerHTML =
-        "<p>Cargando Pokémon...</p>";
-
-
-    const starters =
-        await Promise.all(
-            STARTERS.map(
-                name => getPokemon(name)
-            )
-        );
-
+    if (!container) return;
 
     container.innerHTML = "";
 
+    STARTERS.forEach(starter => {
 
-    starters.forEach(
-        pokemon => {
-
-            const card =
-                document.createElement(
-                    "div"
-                );
-
-            card.className =
-                "pokemon-card";
-
-
-            card.innerHTML = `
-
-                <img
-                    src="${pokemon.image}"
-                >
-
-                <h2>
-                    ${pokemon.name}
-                </h2>
-
-                <div class="types">
-
-                    ${pokemon.types
-                        .map(type =>
-                            `<span class="type">
-                                ${type}
-                            </span>`
-                        )
-                        .join("")}
-
-                </div>
-
-                <p>
-                    HP ${pokemon.stats.hp}
-                </p>
-
-            `;
-
-
-            card.onclick = () => {
-
-                pokemon.level = 5;
-
-                pokemon.currentHP =
-                    pokemon.stats.hp;
-
-
-                game.team.push(
-                    pokemon
-                );
-
-
-                saveGame();
-
-                startAdventure();
-
-            };
-
-
-            container.appendChild(
-                card
+        const pokemon =
+            createPokemon(
+                starter.id,
+                starter.level
             );
 
-        }
-    );
+        const card =
+            document.createElement("button");
+
+        card.className =
+            "starter-card";
+
+        card.innerHTML = `
+            <img
+                src="${pokemon.sprite}"
+                alt="${pokemon.name}"
+            >
+
+            <h2>${pokemon.name}</h2>
+
+            <p>
+                Nv. ${pokemon.level}
+                · ${pokemon.type.join(" / ")}
+            </p>
+        `;
+
+        card.onclick = () => {
+            chooseStarter(pokemon);
+        };
+
+        container.appendChild(card);
+
+    });
+}
+
+function chooseStarter(pokemon) {
+
+    game.started = true;
+
+    game.team = [pokemon];
+
+    game.currentPokemon = 0;
+
+    game.dexSeen = [pokemon.id];
+
+    saveCurrentGame();
+
+    showMap();
 
 }
 
-
-function startAdventure() {
+function showMap() {
 
     showScreen("map");
 
-    updateUI();
+    updateHeader();
 
-    generateMap();
+    updateTeamUI();
 
+    if (
+        typeof renderMap === "function"
+    ) {
+        renderMap();
+    }
 }
 
+function updateHeader() {
 
-function updateUI() {
+    const teamInfo = $("teamInfo");
 
-    const alive =
-        game.team.filter(
-            pokemon =>
-                pokemon.currentHP > 0
-        ).length;
+    const coins = $("coins");
 
+    if (teamInfo) {
+        teamInfo.textContent =
+            `${game.team.length}/6`;
+    }
 
-    document.getElementById(
-        "teamInfo"
-    ).textContent =
-        `${alive}/${game.team.length} vivos`;
+    if (coins) {
+        coins.textContent =
+            `₽ ${game.coins}`;
+    }
+}
 
+function updateTeamUI() {
 
-    document.getElementById(
-        "coins"
-    ).textContent =
-        `₽ ${game.coins}`;
+    const team =
+        $("team");
 
+    if (!team) return;
 
-    document.getElementById(
-        "routeNumber"
-    ).textContent =
-        game.route;
-
-
-    const container =
-        document.getElementById(
-            "team"
-        );
-
-
-    container.innerHTML = "";
-
+    team.innerHTML = "";
 
     game.team.forEach(
-        pokemon => {
+        (pokemon, index) => {
 
-            const element =
-                document.createElement(
-                    "div"
-                );
+            const card =
+                document.createElement("div");
 
-
-            element.className =
+            card.className =
                 "team-pokemon";
 
-
-            if (
-                pokemon.currentHP <= 0
-            ) {
-
-                element.classList.add(
-                    "fainted"
+            const hp =
+                Math.max(
+                    0,
+                    pokemon.hp
                 );
 
-            }
+            const max =
+                Math.max(
+                    1,
+                    pokemon.maxHP
+                );
 
+            card.innerHTML = `
+                <img
+                    src="${pokemon.sprite}"
+                    alt="${pokemon.name}"
+                >
 
-            element.innerHTML = `
-
-                <img src="${pokemon.image}">
-
-                <div>
+                <strong>
                     ${pokemon.name}
-                </div>
+                </strong>
 
                 <small>
-                    Lv.${pokemon.level}
+                    Nv. ${pokemon.level}
                 </small>
-
-                <br>
 
                 <small>
-                    HP
-                    ${pokemon.currentHP}
-                    /
-                    ${pokemon.stats.hp}
+                    ❤️ ${hp}/${max}
                 </small>
-
             `;
 
+            if (
+                index === game.currentPokemon
+            ) {
+                card.style.borderColor =
+                    "#ffd92f";
+            }
 
-            container.appendChild(
-                element
-            );
+            if (
+                pokemon.fainted ||
+                pokemon.hp <= 0
+            ) {
+                card.style.opacity =
+                    "0.45";
+            }
 
-        }
-    );
-
-}
-
-
-function healTeam() {
-
-    game.team.forEach(
-        pokemon => {
-
-            pokemon.currentHP =
-                pokemon.stats.hp;
+            team.appendChild(card);
 
         }
     );
 
-
-    saveGame();
-
-    startAdventure();
-
+    updateHeader();
 }
 
+function saveCurrentGame() {
 
-function gameOver() {
-
-    game.battleRunning = false;
-
-    showScreen("gameover");
-
-}
-
-
-function saveGame() {
-
-    localStorage.setItem(
-        "pokelab_save",
-        JSON.stringify(game)
-    );
+    saveGame({
+        ...game
+    });
 
 }
-
 
 function loadRun() {
 
     const saved =
-        localStorage.getItem(
-            "pokelab_save"
-        );
+        loadGameData();
 
-
-    if (!saved) {
+    if (!saved || !saved.started) {
 
         alert(
-            "No existe una partida guardada."
+            "No tienes ninguna partida guardada."
         );
 
         return;
-
     }
 
+    game = saved;
 
-    const data =
-        JSON.parse(saved);
+    if (!Array.isArray(game.team)) {
+        game.team = [];
+    }
 
+    showMap();
+}
 
-    Object.assign(
-        game,
-        data
+function healTeam() {
+
+    game.team.forEach(pokemon => {
+
+        pokemon.hp =
+            pokemon.maxHP;
+
+        pokemon.fainted =
+            false;
+
+    });
+
+    game.currentPokemon = 0;
+
+    saveCurrentGame();
+
+    updateTeamUI();
+
+    alert(
+        "¡Tu equipo está completamente curado!"
     );
 
+    showMap();
+}
+
+function addPokemon(pokemon) {
 
     if (
-        !game.team ||
-        game.team.length === 0
+        game.team.length >= 6
     ) {
 
-        showStarters();
+        alert(
+            "Tu equipo ya tiene 6 Pokémon."
+        );
 
-        return;
-
+        return false;
     }
 
+    pokemon.fainted = false;
 
-    startAdventure();
+    pokemon.hp =
+        pokemon.maxHP;
+
+    game.team.push(
+        pokemon
+    );
+
+    if (
+        !game.dexSeen.includes(
+            pokemon.id
+        )
+    ) {
+        game.dexSeen.push(
+            pokemon.id
+        );
+    }
+
+    saveCurrentGame();
+
+    updateTeamUI();
+
+    return true;
+}
+
+function removeFaintedPokemon() {
+
+    game.team.forEach(
+        pokemon => {
+
+            if (
+                pokemon.hp <= 0
+            ) {
+
+                pokemon.hp = 0;
+
+                pokemon.fainted = true;
+
+            }
+
+        }
+    );
 
 }
 
+function hasUsablePokemon() {
+
+    return game.team.some(
+        pokemon =>
+            !pokemon.fainted &&
+            pokemon.hp > 0
+    );
+
+}
+
+function getNextUsablePokemon() {
+
+    for (
+        let i = 0;
+        i < game.team.length;
+        i++
+    ) {
+
+        const pokemon =
+            game.team[i];
+
+        if (
+            !pokemon.fainted &&
+            pokemon.hp > 0
+        ) {
+
+            return i;
+
+        }
+
+    }
+
+    return -1;
+}
+
+function checkGameOver() {
+
+    removeFaintedPokemon();
+
+    const alive =
+        hasUsablePokemon();
+
+    if (!alive) {
+
+        game.currentPokemon = 0;
+
+        saveCurrentGame();
+
+        showScreen("gameover");
+
+        return true;
+    }
+
+    return false;
+}
+
+function openSwitchMenu() {
+
+    if (
+        typeof renderSwitchMenu ===
+        "function"
+    ) {
+        renderSwitchMenu();
+    }
+
+    showScreen("switch");
+}
+
+function closeSwitchMenu() {
+
+    showScreen("battle");
+}
+
+function switchPokemon(index) {
+
+    index =
+        Number(index);
+
+    if (
+        !game.team[index]
+    ) return false;
+
+    const pokemon =
+        game.team[index];
+
+    if (
+        pokemon.fainted ||
+        pokemon.hp <= 0
+    ) {
+
+        alert(
+            `${pokemon.name} está debilitado.`
+        );
+
+        return false;
+    }
+
+    game.currentPokemon =
+        index;
+
+    saveCurrentGame();
+
+    if (
+        typeof updateBattlePlayer ===
+        "function"
+    ) {
+
+        updateBattlePlayer();
+
+    }
+
+    showScreen("battle");
+
+    return true;
+}
+
+function markDexSeen(id) {
+
+    id = Number(id);
+
+    if (
+        !game.dexSeen.includes(id)
+    ) {
+
+        game.dexSeen.push(id);
+
+        saveCurrentGame();
+
+    }
+}
 
 function skipCapture() {
 
-    game.route++;
-
-    saveGame();
-
-    startAdventure();
+    showMap();
 
 }
 
+function capturePokemon(pokemon) {
 
-function showDex() {
+    const added =
+        addPokemon(pokemon);
 
-    alert(
-        "Pokédex de PokeLab\n\n" +
-        "La Pokédex completa llegará próximamente."
-    );
+    if (added) {
+
+        alert(
+            `¡${pokemon.name} se unió a tu equipo!`
+        );
+
+    }
+
+    showMap();
 
 }
+
+function openDex() {
+
+    showScreen("dex");
+
+    if (
+        typeof loadDex === "function"
+    ) {
+        loadDex();
+    }
+}
+
+document.addEventListener(
+    "DOMContentLoaded",
+    () => {
+
+        const saved =
+            loadGameData();
+
+        if (
+            saved &&
+            saved.started
+        ) {
+
+            game = saved;
+
+        }
+
+    }
+);
+
+window.newRun = newRun;
+window.loadRun = loadRun;
+window.showScreen = showScreen;
+window.openDex = openDex;
+window.healTeam = healTeam;
+window.openSwitchMenu = openSwitchMenu;
+window.closeSwitchMenu = closeSwitchMenu;
+window.switchPokemon = switchPokemon;
+window.skipCapture = skipCapture;
+window.capturePokemon = capturePokemon;
