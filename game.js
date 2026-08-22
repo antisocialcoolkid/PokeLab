@@ -4,9 +4,7 @@ function showScreen(id) {
         .querySelectorAll(".screen")
         .forEach(screen => {
 
-            screen.classList.remove(
-                "active"
-            );
+            screen.classList.remove("active");
 
         });
 
@@ -28,6 +26,8 @@ async function newRun() {
     game.currentPokemon = null;
 
     game.enemyPokemon = null;
+
+    game.battleRunning = false;
 
     saveGame();
 
@@ -52,8 +52,7 @@ async function showStarters() {
     const starters =
         await Promise.all(
             STARTERS.map(
-                name =>
-                    getPokemon(name)
+                name => getPokemon(name)
             )
         );
 
@@ -61,69 +60,73 @@ async function showStarters() {
     container.innerHTML = "";
 
 
-    starters.forEach(pokemon => {
+    starters.forEach(
+        pokemon => {
 
-        const card =
-            document.createElement(
-                "div"
+            const card =
+                document.createElement(
+                    "div"
+                );
+
+            card.className =
+                "pokemon-card";
+
+
+            card.innerHTML = `
+
+                <img
+                    src="${pokemon.image}"
+                >
+
+                <h2>
+                    ${pokemon.name}
+                </h2>
+
+                <div class="types">
+
+                    ${pokemon.types
+                        .map(type =>
+                            `<span class="type">
+                                ${type}
+                            </span>`
+                        )
+                        .join("")}
+
+                </div>
+
+                <p>
+                    HP ${pokemon.stats.hp}
+                </p>
+
+            `;
+
+
+            card.onclick = () => {
+
+                pokemon.level = 5;
+
+                pokemon.currentHP =
+                    pokemon.stats.hp;
+
+
+                game.team.push(
+                    pokemon
+                );
+
+
+                saveGame();
+
+                startAdventure();
+
+            };
+
+
+            container.appendChild(
+                card
             );
 
-        card.className =
-            "pokemon-card";
-
-        card.innerHTML = `
-
-            <img
-                src="${pokemon.image}"
-                alt="${pokemon.name}"
-            >
-
-            <h2>
-                ${pokemon.name}
-            </h2>
-
-            <div class="types">
-
-                ${pokemon.types
-                    .map(type =>
-                        `<span class="type">
-                            ${type}
-                        </span>`
-                    )
-                    .join("")}
-
-            </div>
-
-            <p>
-                HP ${pokemon.stats.hp}
-            </p>
-
-        `;
-
-
-        card.onclick = () => {
-
-            game.team.push({
-
-                ...pokemon,
-
-                level: 5,
-
-                currentHP:
-                    pokemon.stats.hp
-
-            });
-
-            saveGame();
-
-            startAdventure();
-
-        };
-
-
-        container.appendChild(card);
-
-    });
+        }
+    );
 
 }
 
@@ -141,59 +144,122 @@ function startAdventure() {
 
 function updateUI() {
 
-    document
-        .getElementById("teamInfo")
-        .textContent =
-        `TEAM ${game.team.length}/6`;
+    const alive =
+        game.team.filter(
+            pokemon =>
+                pokemon.currentHP > 0
+        ).length;
 
-    document
-        .getElementById("coins")
-        .textContent =
+
+    document.getElementById(
+        "teamInfo"
+    ).textContent =
+        `${alive}/${game.team.length} vivos`;
+
+
+    document.getElementById(
+        "coins"
+    ).textContent =
         `₽ ${game.coins}`;
 
-    document
-        .getElementById("routeNumber")
-        .textContent =
+
+    document.getElementById(
+        "routeNumber"
+    ).textContent =
         game.route;
 
 
-    const team =
+    const container =
         document.getElementById(
             "team"
         );
 
-    team.innerHTML = "";
+
+    container.innerHTML = "";
 
 
-    game.team.forEach(pokemon => {
+    game.team.forEach(
+        pokemon => {
 
-        const element =
-            document.createElement(
-                "div"
+            const element =
+                document.createElement(
+                    "div"
+                );
+
+
+            element.className =
+                "team-pokemon";
+
+
+            if (
+                pokemon.currentHP <= 0
+            ) {
+
+                element.classList.add(
+                    "fainted"
+                );
+
+            }
+
+
+            element.innerHTML = `
+
+                <img src="${pokemon.image}">
+
+                <div>
+                    ${pokemon.name}
+                </div>
+
+                <small>
+                    Lv.${pokemon.level}
+                </small>
+
+                <br>
+
+                <small>
+                    HP
+                    ${pokemon.currentHP}
+                    /
+                    ${pokemon.stats.hp}
+                </small>
+
+            `;
+
+
+            container.appendChild(
+                element
             );
 
-        element.className =
-            "team-pokemon";
+        }
+    );
 
-        element.innerHTML = `
+}
 
-            <img
-                src="${pokemon.image}"
-            >
 
-            <div>
-                ${pokemon.name}
-            </div>
+function healTeam() {
 
-            <small>
-                Lv.${pokemon.level}
-            </small>
+    game.team.forEach(
+        pokemon => {
 
-        `;
+            pokemon.currentHP =
+                pokemon.stats.hp;
 
-        team.appendChild(element);
+        }
+    );
 
-    });
+
+    saveGame();
+
+    startAdventure();
+
+}
+
+
+function gameOver() {
+
+    game.battleRunning = false;
+
+    showScreen("gameover");
 
 }
 
@@ -215,10 +281,11 @@ function loadRun() {
             "pokelab_save"
         );
 
+
     if (!saved) {
 
         alert(
-            "No tienes una partida guardada."
+            "No existe una partida guardada."
         );
 
         return;
@@ -236,7 +303,10 @@ function loadRun() {
     );
 
 
-    if (!game.team.length) {
+    if (
+        !game.team ||
+        game.team.length === 0
+    ) {
 
         showStarters();
 
@@ -250,13 +320,6 @@ function loadRun() {
 }
 
 
-function gameOver() {
-
-    showScreen("gameover");
-
-}
-
-
 function skipCapture() {
 
     game.route++;
@@ -264,5 +327,15 @@ function skipCapture() {
     saveGame();
 
     startAdventure();
+
+}
+
+
+function showDex() {
+
+    alert(
+        "Pokédex de PokeLab\n\n" +
+        "La Pokédex completa llegará próximamente."
+    );
 
 }
