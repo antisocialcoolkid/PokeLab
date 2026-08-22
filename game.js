@@ -1,81 +1,117 @@
-let game = {
-
-    team: [],
-
-    route: 0,
-
-    coins: 500
-
-};
-
 function showScreen(id) {
 
     document
         .querySelectorAll(".screen")
-        .forEach(screen =>
-            screen.classList.remove("active")
-        );
+        .forEach(screen => {
+
+            screen.classList.remove(
+                "active"
+            );
+
+        });
 
     document
         .getElementById(id)
         .classList.add("active");
+
 }
 
-function newRun() {
 
-    game = {
+async function newRun() {
 
-        team: [],
+    game.team = [];
 
-        route: 0,
+    game.route = 1;
 
-        coins: 500
+    game.coins = 500;
 
-    };
+    game.currentPokemon = null;
+
+    game.enemyPokemon = null;
 
     saveGame();
 
-    showStarter();
+    await showStarters();
 
 }
 
-function showStarter() {
+
+async function showStarters() {
 
     showScreen("starter");
 
-    const list =
-        document.getElementById("starterList");
+    const container =
+        document.getElementById(
+            "starterList"
+        );
 
-    list.innerHTML = "";
+    container.innerHTML =
+        "<p>Cargando Pokémon...</p>";
 
-    creatures.forEach(creature => {
+
+    const starters =
+        await Promise.all(
+            STARTERS.map(
+                name =>
+                    getPokemon(name)
+            )
+        );
+
+
+    container.innerHTML = "";
+
+
+    starters.forEach(pokemon => {
 
         const card =
-            document.createElement("div");
+            document.createElement(
+                "div"
+            );
 
         card.className =
-            "creature-card";
+            "pokemon-card";
 
         card.innerHTML = `
-            <div class="creature-icon">
-                ${creature.icon}
+
+            <img
+                src="${pokemon.image}"
+                alt="${pokemon.name}"
+            >
+
+            <h2>
+                ${pokemon.name}
+            </h2>
+
+            <div class="types">
+
+                ${pokemon.types
+                    .map(type =>
+                        `<span class="type">
+                            ${type}
+                        </span>`
+                    )
+                    .join("")}
+
             </div>
 
-            <h3>${creature.name}</h3>
-
-            <p>${creature.type}</p>
-
             <p>
-                HP ${creature.hp}
-                |
-                ATK ${creature.attack}
+                HP ${pokemon.stats.hp}
             </p>
+
         `;
+
 
         card.onclick = () => {
 
             game.team.push({
-                ...creature
+
+                ...pokemon,
+
+                level: 5,
+
+                currentHP:
+                    pokemon.stats.hp
+
             });
 
             saveGame();
@@ -84,106 +120,6 @@ function showStarter() {
 
         };
 
-        list.appendChild(card);
-
-    });
-
-}
-
-function startAdventure() {
-
-    showScreen("map");
-
-    generateMap();
-
-    updateTeam();
-
-}
-
-function selectNode(node) {
-
-    if (node.type === "battle") {
-
-        startBattle();
-
-        return;
-    }
-
-    if (node.type === "catch") {
-
-        showCatch();
-
-        return;
-    }
-
-    if (node.type === "item") {
-
-        game.coins += 100;
-
-        alert(
-            "¡Encontraste 100 monedas!"
-        );
-
-        startAdventure();
-
-        return;
-    }
-
-    if (node.type === "BOSS") {
-
-        startBattle();
-
-    }
-
-}
-
-function showCatch() {
-
-    showScreen("catch");
-
-    const container =
-        document.getElementById("catchList");
-
-    container.innerHTML = "";
-
-    const choices =
-        [...creatures]
-        .sort(() => Math.random() - .5)
-        .slice(0,3);
-
-    choices.forEach(creature => {
-
-        const card =
-            document.createElement("div");
-
-        card.className =
-            "creature-card";
-
-        card.innerHTML = `
-            <div class="creature-icon">
-                ${creature.icon}
-            </div>
-
-            <h3>${creature.name}</h3>
-
-            <p>${creature.type}</p>
-        `;
-
-        card.onclick = () => {
-
-            if (game.team.length < 6) {
-
-                game.team.push({
-                    ...creature
-                });
-
-            }
-
-            saveGame();
-
-            startAdventure();
-
-        };
 
         container.appendChild(card);
 
@@ -191,28 +127,76 @@ function showCatch() {
 
 }
 
-function skipCatch() {
 
-    startAdventure();
+function startAdventure() {
 
-}
+    showScreen("map");
 
-function finishBattle() {
+    updateUI();
 
-    game.route++;
-
-    saveGame();
-
-    showCatch();
+    generateMap();
 
 }
 
-function updateTeam() {
 
-    document.getElementById("teamInfo")
+function updateUI() {
+
+    document
+        .getElementById("teamInfo")
         .textContent =
         `TEAM ${game.team.length}/6`;
+
+    document
+        .getElementById("coins")
+        .textContent =
+        `₽ ${game.coins}`;
+
+    document
+        .getElementById("routeNumber")
+        .textContent =
+        game.route;
+
+
+    const team =
+        document.getElementById(
+            "team"
+        );
+
+    team.innerHTML = "";
+
+
+    game.team.forEach(pokemon => {
+
+        const element =
+            document.createElement(
+                "div"
+            );
+
+        element.className =
+            "team-pokemon";
+
+        element.innerHTML = `
+
+            <img
+                src="${pokemon.image}"
+            >
+
+            <div>
+                ${pokemon.name}
+            </div>
+
+            <small>
+                Lv.${pokemon.level}
+            </small>
+
+        `;
+
+        team.appendChild(element);
+
+    });
+
 }
+
 
 function saveGame() {
 
@@ -223,40 +207,62 @@ function saveGame() {
 
 }
 
+
 function loadRun() {
 
-    const save =
+    const saved =
         localStorage.getItem(
             "pokelab_save"
         );
 
-    if (!save) {
+    if (!saved) {
 
-        alert("No hay una partida guardada.");
+        alert(
+            "No tienes una partida guardada."
+        );
 
         return;
+
     }
 
-    game = JSON.parse(save);
+
+    const data =
+        JSON.parse(saved);
+
+
+    Object.assign(
+        game,
+        data
+    );
+
+
+    if (!game.team.length) {
+
+        showStarters();
+
+        return;
+
+    }
+
 
     startAdventure();
 
 }
 
-function resetGame() {
 
-    localStorage.removeItem(
-        "pokelab_save"
-    );
+function gameOver() {
 
-    game = {
+    showScreen("gameover");
 
-        team:[],
+}
 
-        route:0,
 
-        coins:500
+function skipCapture() {
 
-    };
+    game.route++;
+
+    saveGame();
+
+    startAdventure();
 
 }
