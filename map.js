@@ -1,577 +1,328 @@
 /* =========================================================
-   POKELAB — MAP SYSTEM
-   ========================================================= */
+   POKELAB — map.js
+========================================================= */
 
-let currentMapNode = null;
-let mapLocked = false;
+const ROUTES = {
 
+    1: [
+        {
+            type: "battle",
+            icon: "⚔️",
+            label: "ENTRENADOR"
+        },
+        {
+            type: "capture",
+            icon: "🌿",
+            label: "HIERBA"
+        },
+        {
+            type: "item",
+            icon: "🎒",
+            label: "OBJETO"
+        },
+        {
+            type: "heal",
+            icon: "🏥",
+            label: "CENTRO"
+        },
+        {
+            type: "battle",
+            icon: "⚔️",
+            label: "ENTRENADOR"
+        },
+        {
+            type: "boss",
+            icon: "👑",
+            label: "JEFE"
+        }
+    ],
 
-/* ---------------------------------------------------------
-   CREAR MAPA
---------------------------------------------------------- */
+    2: [
+        {
+            type: "capture",
+            icon: "🌿",
+            label: "HIERBA"
+        },
+        {
+            type: "battle",
+            icon: "⚔️",
+            label: "ENTRENADOR"
+        },
+        {
+            type: "item",
+            icon: "🎒",
+            label: "OBJETO"
+        },
+        {
+            type: "capture",
+            icon: "🌿",
+            label: "HIERBA"
+        },
+        {
+            type: "heal",
+            icon: "🏥",
+            label: "CENTRO"
+        },
+        {
+            type: "boss",
+            icon: "👑",
+            label: "JEFE"
+        }
+    ],
 
-function generateMap() {
+    3: [
+        {
+            type: "battle",
+            icon: "⚔️",
+            label: "ENTRENADOR"
+        },
+        {
+            type: "battle",
+            icon: "⚔️",
+            label: "ENTRENADOR"
+        },
+        {
+            type: "capture",
+            icon: "🌿",
+            label: "HIERBA"
+        },
+        {
+            type: "item",
+            icon: "🎒",
+            label: "OBJETO"
+        },
+        {
+            type: "heal",
+            icon: "🏥",
+            label: "CENTRO"
+        },
+        {
+            type: "boss",
+            icon: "👑",
+            label: "JEFE"
+        }
+    ]
 
-    const container = document.getElementById("mapNodes");
+};
+
+function renderMap() {
+
+    const container =
+        $("mapNodes");
 
     if (!container) return;
 
     container.innerHTML = "";
 
-    const map = [
+    const route =
+        ROUTES[game.route] ||
+        ROUTES[1];
 
-        {
-            id: 1,
-            nodes: [
-                { type: "battle" }
-            ]
-        },
+    const columns = [];
 
-        {
-            id: 2,
-            nodes: [
-                { type: "battle" },
-                { type: "item" }
-            ]
-        },
+    route.forEach(
+        (node, index) => {
 
-        {
-            id: 3,
-            nodes: [
-                { type: "battle" },
-                { type: "capture" },
-                { type: "heal" }
-            ]
-        },
+            if (
+                index % 2 === 0
+            ) {
 
-        {
-            id: 4,
-            nodes: [
-                { type: "battle" },
-                { type: "item" }
-            ]
-        },
+                columns.push([]);
 
-        {
-            id: 5,
-            nodes: [
-                { type: "boss" }
-            ]
+            }
+
+            columns[
+                columns.length - 1
+            ].push(node);
+
         }
+    );
 
-    ];
+    columns.forEach(
+        (column, columnIndex) => {
 
+            const wrapper =
+                document.createElement("div");
 
-    map.forEach((column, columnIndex) => {
+            wrapper.className =
+                "map-column";
 
-        const columnElement =
-            document.createElement("div");
+            column.forEach(
+                (node, nodeIndex) => {
 
-        columnElement.className =
-            "map-column";
+                    const button =
+                        document.createElement("button");
 
+                    button.className =
+                        `map-node ${node.type}`;
 
-        column.nodes.forEach((nodeData, nodeIndex) => {
+                    button.innerHTML = `
+                        <div class="map-node-icon">
+                            ${node.icon}
+                        </div>
 
-            const node =
-                createMapNode(
-                    nodeData,
-                    columnIndex,
-                    nodeIndex
+                        <div class="map-node-label">
+                            ${node.label}
+                        </div>
+                    `;
+
+                    button.onclick =
+                        () => handleMapNode(node);
+
+                    wrapper.appendChild(
+                        button
+                    );
+
+                }
+            );
+
+            container.appendChild(
+                wrapper
+            );
+
+        }
+    );
+
+    const routeNumber =
+        $("routeNumber");
+
+    if (routeNumber) {
+
+        routeNumber.textContent =
+            game.route;
+
+    }
+
+}
+
+function handleMapNode(node) {
+
+    switch (node.type) {
+
+        case "battle":
+
+            startRandomBattle(false);
+
+            break;
+
+        case "capture":
+
+            openCapture();
+
+            break;
+
+        case "item":
+
+            getMapItem();
+
+            break;
+
+        case "heal":
+
+            showScreen("heal");
+
+            break;
+
+        case "boss":
+
+            startRandomBattle(true);
+
+            break;
+
+    }
+
+}
+
+function openCapture() {
+
+    showScreen("capture");
+
+    const container =
+        $("captureList");
+
+    if (!container) return;
+
+    container.innerHTML = "";
+
+    const options =
+        getCaptureOptions();
+
+    options.forEach(
+        pokemon => {
+
+            const card =
+                document.createElement("button");
+
+            card.className =
+                "starter-card";
+
+            card.innerHTML = `
+                <img
+                    src="${pokemon.sprite}"
+                    alt="${pokemon.name}"
+                >
+
+                <h2>
+                    ${pokemon.name}
+                </h2>
+
+                <p>
+                    Nv. ${pokemon.level}
+                </p>
+            `;
+
+            card.onclick =
+                () => capturePokemon(
+                    pokemon
                 );
 
-            columnElement.appendChild(node);
-
-        });
-
-
-        container.appendChild(columnElement);
-
-    });
-
-}
-
-
-/* ---------------------------------------------------------
-   CREAR NODO
---------------------------------------------------------- */
-
-function createMapNode(nodeData, columnIndex, nodeIndex) {
-
-    const node =
-        document.createElement("button");
-
-    node.type = "button";
-
-    node.className =
-        `map-node ${nodeData.type}`;
-
-    node.dataset.column =
-        columnIndex;
-
-    node.dataset.index =
-        nodeIndex;
-
-
-    const icon =
-        getNodeIcon(nodeData.type);
-
-    const title =
-        getNodeTitle(nodeData.type);
-
-
-    node.innerHTML = `
-
-        <span class="map-node-icon">
-            ${icon}
-        </span>
-
-        <span class="map-node-label">
-            ${title}
-        </span>
-
-    `;
-
-
-    node.addEventListener("click", () => {
-
-        if (mapLocked) return;
-
-        selectMapNode(nodeData.type);
-
-    });
-
-
-    return node;
-
-}
-
-
-/* ---------------------------------------------------------
-   ICONOS
---------------------------------------------------------- */
-
-function getNodeIcon(type) {
-
-    switch (type) {
-
-        case "battle":
-            return "⚔";
-
-        case "capture":
-            return "●";
-
-        case "item":
-            return "▣";
-
-        case "heal":
-            return "✚";
-
-        case "boss":
-            return "♛";
-
-        default:
-            return "?";
-
-    }
-
-}
-
-
-/* ---------------------------------------------------------
-   NOMBRES
---------------------------------------------------------- */
-
-function getNodeTitle(type) {
-
-    switch (type) {
-
-        case "battle":
-            return "COMBATE";
-
-        case "capture":
-            return "ENCUENTRO";
-
-        case "item":
-            return "OBJETO";
-
-        case "heal":
-            return "CENTRO";
-
-        case "boss":
-            return "JEFE";
-
-        default:
-            return "???";
-
-    }
-
-}
-
-
-/* ---------------------------------------------------------
-   SELECCIONAR NODO
---------------------------------------------------------- */
-
-async function selectMapNode(type) {
-
-    if (mapLocked) return;
-
-    mapLocked = true;
-
-
-    switch (type) {
-
-        case "battle":
-
-            await startBattle();
-
-            break;
-
-
-        case "boss":
-
-            await startBossBattle();
-
-            break;
-
-
-        case "capture":
-
-            await showCapture();
-
-            break;
-
-
-        case "heal":
-
-            openPokemonCenter();
-
-            break;
-
-
-        case "item":
-
-            collectItem();
-
-            break;
-
-    }
-
-
-    mapLocked = false;
-
-}
-
-
-/* ---------------------------------------------------------
-   JEFE
---------------------------------------------------------- */
-
-async function startBossBattle() {
-
-    game.isBossBattle = true;
-
-    await startBattle();
-
-}
-
-
-/* ---------------------------------------------------------
-   CENTRO POKÉMON
---------------------------------------------------------- */
-
-function openPokemonCenter() {
-
-    showScreen("heal");
-
-}
-
-
-/* ---------------------------------------------------------
-   CURAR EQUIPO
---------------------------------------------------------- */
-
-function healTeam() {
-
-    if (!game.team) return;
-
-
-    game.team.forEach(pokemon => {
-
-        pokemon.currentHP =
-            pokemon.stats.hp;
-
-    });
-
-
-    saveGame();
-
-
-    showPokemonCenterAnimation();
-
-}
-
-
-/* ---------------------------------------------------------
-   ANIMACIÓN CENTRO
---------------------------------------------------------- */
-
-function showPokemonCenterAnimation() {
-
-    const message =
-        document.querySelector(
-            "#heal .center-box p"
-        );
-
-
-    if (message) {
-
-        message.textContent =
-            "Curando a tus Pokémon...";
-
-    }
-
-
-    setTimeout(() => {
-
-        if (message) {
-
-            message.textContent =
-                "¡Tus Pokémon están completamente recuperados!";
+            container.appendChild(
+                card
+            );
 
         }
-
-
-        setTimeout(() => {
-
-            game.route++;
-
-            saveGame();
-
-            startAdventure();
-
-        }, 1200);
-
-    }, 1000);
-
-}
-
-
-/* ---------------------------------------------------------
-   OBJETOS
---------------------------------------------------------- */
-
-function collectItem() {
-
-    const rewards = [
-
-        {
-            type: "coins",
-            amount: 100,
-            text: "Encontraste ₽100."
-        },
-
-        {
-            type: "coins",
-            amount: 200,
-            text: "Encontraste ₽200."
-        },
-
-        {
-            type: "heal",
-            amount: 0,
-            text: "Encontraste una poción."
-        }
-
-    ];
-
-
-    const reward =
-        rewards[
-            Math.floor(
-                Math.random() *
-                rewards.length
-            )
-        ];
-
-
-    if (reward.type === "coins") {
-
-        game.coins +=
-            reward.amount;
-
-    }
-
-
-    if (reward.type === "heal") {
-
-        healRandomPokemon();
-
-    }
-
-
-    saveGame();
-
-
-    showItemMessage(
-        reward.text
     );
 
 }
 
+function getMapItem() {
 
-/* ---------------------------------------------------------
-   CURAR UN POKÉMON
---------------------------------------------------------- */
+    const items = [
+        "Poción",
+        "Superpoción",
+        "Poké Ball"
+    ];
 
-function healRandomPokemon() {
-
-    const damaged =
-        game.team.filter(
-            pokemon =>
-                pokemon.currentHP <
-                pokemon.stats.hp
-        );
-
-
-    if (!damaged.length) return;
-
-
-    const pokemon =
-        damaged[
+    const item =
+        items[
             Math.floor(
                 Math.random() *
-                damaged.length
+                items.length
             )
         ];
 
+    const rewards = {
+        "Poción": 50,
+        "Superpoción": 100,
+        "Poké Ball": 75
+    };
 
     const amount =
-        Math.floor(
-            pokemon.stats.hp * 0.30
-        );
+        rewards[item];
 
+    game.coins += amount;
 
-    pokemon.currentHP =
-        Math.min(
-            pokemon.stats.hp,
-            pokemon.currentHP + amount
-        );
+    saveCurrentGame();
 
-}
+    updateHeader();
 
-
-/* ---------------------------------------------------------
-   MENSAJE DE OBJETO
---------------------------------------------------------- */
-
-function showItemMessage(text) {
-
-    const oldScreen =
-        document.querySelector(
-            ".item-message"
-        );
-
-
-    if (oldScreen)
-        oldScreen.remove();
-
-
-    const message =
-        document.createElement("div");
-
-
-    message.className =
-        "item-message";
-
-
-    message.innerHTML = `
-
-        <div class="item-message-box">
-
-            <div class="item-ball">
-                ●
-            </div>
-
-            <h2>
-                ¡OBJETO ENCONTRADO!
-            </h2>
-
-            <p>
-                ${text}
-            </p>
-
-            <button>
-                CONTINUAR
-            </button>
-
-        </div>
-
-    `;
-
-
-    document.body.appendChild(message);
-
-
-    message
-        .querySelector("button")
-        .onclick = () => {
-
-            message.remove();
-
-            game.route++;
-
-            saveGame();
-
-            startAdventure();
-
-        };
+    alert(
+        `¡Encontraste ${item}!\n\n+₽${amount}`
+    );
 
 }
 
-
-/* ---------------------------------------------------------
-   AVANZAR RUTA
---------------------------------------------------------- */
-
-function nextRoute() {
-
-    game.route++;
-
-    saveGame();
-
-    startAdventure();
-
-}
-
-
-/* ---------------------------------------------------------
-   ACTUALIZAR MAPA
---------------------------------------------------------- */
-
-function refreshMap() {
-
-    generateMap();
-
-}
-
-
-/* ---------------------------------------------------------
-   INICIAR
---------------------------------------------------------- */
-
-window.addEventListener(
-    "load",
-    () => {
-
-        if (
-            typeof game !== "undefined"
-        ) {
-
-            generateMap();
-
-        }
-
-    }
-);
+window.renderMap = renderMap;
+window.openCapture = openCapture;
+window.handleMapNode = handleMapNode;
+window.getMapItem = getMapItem;
